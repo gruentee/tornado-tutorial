@@ -41,6 +41,10 @@
           </div>
         </nav>
 
+        {% if 'message' in globals() and message is not None %}
+            <p class="message bg-{{ message_type }}">{{ message }}</p>
+        {% end %}
+
         <div class="container">
         {% block content %} {% end %}
         </div>
@@ -50,7 +54,7 @@
           <footer>
             <p>
                 &copy; {{ datetime.datetime.now().strftime("%Y") }} <a href="https://websolutions.koeln">Constantin Kraft</a> <br />
-                built with Open Source software
+                ~ built with Open Source software ~
             </p>
           </footer>
         </div> <!-- /container -->

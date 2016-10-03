@@ -1,36 +1,25 @@
-import tornado.ioloop
 import tornado.web
-from tornado.web import url
-from tornado.web import StaticFileHandler
-from peewee import SqliteDatabase
-from time import strftime
 from flask_peewee.utils import slugify
+from tornado.web import StaticFileHandler
+from tornado.web import url
 
+from blog.handlers.mixins.peewee import PeeweeMixin
+from blog.handlers.mixins.message import FlashMixin
 from models import *
+from blog.util.flash_message import Flash
 
 
-class PeeweeRequestHandler(tornado.web.RequestHandler):
-    """Basic request handler to subclass from"""
-
-    def initialize(self, database):
-        self.database = database
-        self.database.connect()
-
-    def on_finish(self):
-        if not self.database.is_closed:
-            self.database.close()
-
-
-class MainHandler(PeeweeRequestHandler):
+class MainHandler(PeeweeMixin):
 
     def get(self):
         self.redirect("/posts")
 
 
-class PostIndexHandler(PeeweeRequestHandler):
+class PostIndexHandler(PeeweeMixin, FlashMixin):
     """Show an index poage with blog posts"""
 
     def get(self):
+        message = None
         try:
             posts = Post.select()
             # TODO: paginate
@@ -39,7 +28,7 @@ class PostIndexHandler(PeeweeRequestHandler):
         self.render("post_index.html", posts=posts)
 
 
-class PostHandler(PeeweeRequestHandler):
+class PostHandler(PeeweeMixin):
     """Handler for serving single posts"""
 
     def get(self, *args, **kwargs):
@@ -54,19 +43,19 @@ class PostHandler(PeeweeRequestHandler):
         else:
             self.set_status(404, 'Post not found.')
 
-    def post(self, *args, **kwargs):
-        # TODO: insert post into DB
-        pass
 
-
-class CreateHandler(PeeweeRequestHandler):
-    """Handler for creating posts"""
+class CreateHandler(PeeweeMixin, FlashMixin):
+    """Handler for creating and editing posts"""
 
     def get(self, post_id):
         # post_id = self.get_argument("id", None)
         # TODO: param validation
         post = Post.select().where(Post.id == post_id).get()
-        self.render("post_create.html", post=post)
+        if self.has_flash('success'):
+            flash = self.get_flash('success')
+            self.render("post_create.html", post=post, message=flash.message, message_type='success')
+        else:
+            self.render("post_create.html", post=post)
 
     def post(self):
         # TODO: authentication
@@ -76,9 +65,7 @@ class CreateHandler(PeeweeRequestHandler):
         title = self.get_argument("inputTitle", None)
         text = self.get_argument("inputText", None)
         date_created = datetime.datetime.now()
-
-        # FIXME
-
+        # TODO: validation
         try:
             # create
             post = Post(author_id=author_id, title=title, text=text, date_created=date_created,
@@ -88,8 +75,9 @@ class CreateHandler(PeeweeRequestHandler):
                 post = Post(id=post_id, author_id=author_id, title=title, text=text, date_created=date_created,
                             slug=slugify(title))
             post.save()
-            # TODO: set flash message
-            self.redirect("/")
+            flash = Flash("Post erfolgreich gespeichert!")
+            self.set_flash(flash, 'success')
+            self.redirect(self.reverse_url('post_edit', post_id))
         except Exception as e:
             self.write("Something went wrong!")
             print(e)
@@ -101,10 +89,10 @@ settings = {
 }
 
 app = tornado.web.Application([
-    url(r"/", MainHandler, dict(database=db)),
+    url(r"/", MainHandler, dict(database=db), 'home'),
     url(r"/posts", PostIndexHandler, dict(database=db), name="post_index"),
     url(r"/post/create", CreateHandler, dict(database=db), name="post_create"),
-    url(r"/post/edit/([0-9]+)", CreateHandler, dict(database=db), name="post_edit"),
+    url(r"/post/([0-9]+)/edit", CreateHandler, dict(database=db), name="post_edit"),
     # url(r"/post/([0-9]+)", PostHandler, dict(database=db), name="post_view"),
     url(r"/post/(.*)", PostHandler, dict(database=db), name="post_view"),
     url(r"/(.*)", StaticFileHandler, {"path": "./static"})
