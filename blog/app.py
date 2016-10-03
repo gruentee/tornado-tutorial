@@ -24,7 +24,7 @@ class PeeweeRequestHandler(tornado.web.RequestHandler):
 class MainHandler(PeeweeRequestHandler):
 
     def get(self):
-        self.render("index.html")
+        self.redirect("/posts")
 
 
 class PostIndexHandler(PeeweeRequestHandler):
@@ -48,7 +48,7 @@ class PostHandler(PeeweeRequestHandler):
             post = Post.select().where(Post.slug == slug).get()
         else:
             post_id = int(args[0])
-            posts = Post.select().where(Post.id == post_id).get()
+            post = Post.select().where(Post.id == post_id).get()
         if post:
             self.render("post_detail.html", post=post)
         else:
@@ -62,31 +62,38 @@ class PostHandler(PeeweeRequestHandler):
 class CreateHandler(PeeweeRequestHandler):
     """Handler for creating posts"""
 
-    def get(self):
-        self.render("post_create.html")
+    def get(self, post_id):
+        # post_id = self.get_argument("id", None)
+        # TODO: param validation
+        post = Post.select().where(Post.id == post_id).get()
+        self.render("post_create.html", post=post)
 
     def post(self):
         # TODO: authentication
-        id = self.get_argument("id", None)
+        # TODO: authorization
+        post_id = self.get_argument("postId", None)
         author_id = 1 # TODO: get author id from authentication
         title = self.get_argument("inputTitle", None)
         text = self.get_argument("inputText", None)
         date_created = datetime.datetime.now()
 
-        if id is None:
-            # create post
-            try:
-                post = Post.create(author_id=author_id, title=title, text=text, date_created=date_created,
-                                   slug=slugify(title))
-                post.save()
-                # TODO: set flash message
-                self.redirect("/")
-            except Exception as e:
-                print(e)
-                self.write("Something went wrong!")
-        else:
+        # FIXME
+
+        try:
+            # create
+            post = Post(author_id=author_id, title=title, text=text, date_created=date_created,
+                        slug=slugify(title))
             # update
-            pass
+            if post_id is not None:
+                post = Post(id=post_id, author_id=author_id, title=title, text=text, date_created=date_created,
+                            slug=slugify(title))
+            post.save()
+            # TODO: set flash message
+            self.redirect("/")
+        except Exception as e:
+            self.write("Something went wrong!")
+            print(e)
+
 
 settings = {
     'static_path': 'static',
@@ -97,6 +104,7 @@ app = tornado.web.Application([
     url(r"/", MainHandler, dict(database=db)),
     url(r"/posts", PostIndexHandler, dict(database=db), name="post_index"),
     url(r"/post/create", CreateHandler, dict(database=db), name="post_create"),
+    url(r"/post/edit/([0-9]+)", CreateHandler, dict(database=db), name="post_edit"),
     # url(r"/post/([0-9]+)", PostHandler, dict(database=db), name="post_view"),
     url(r"/post/(.*)", PostHandler, dict(database=db), name="post_view"),
     url(r"/(.*)", StaticFileHandler, {"path": "./static"})
