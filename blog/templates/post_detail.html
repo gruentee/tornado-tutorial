@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="blog-preview col-md-8">
+    <article class="blog-excerpt">
+        <header>
+            <h2><a href="{{ reverse_url("post_view", post.slug) }}/">{{ post.title }}</a> </h2>
+            <span class="post-datetime">{{ post.date_created.strftime("%d.%m.%Y um %H:%I") }}</span>
+        </header>
+        <section class="main-excerpt">
+            <p>{% raw post.text.replace("\n", "<br>") %}&hellip;</p>
+        </section>
+    </article>
+
+</section>
+<aside class="sidebar col-md-3">
+    <h3>A sidebar</h3>
+    <p>Small, undead moons quirky hail a cloudy, addled wave. The pants endures with greed, taste the quarter-deck until it travels!</p>
+</aside>
+{% end %}

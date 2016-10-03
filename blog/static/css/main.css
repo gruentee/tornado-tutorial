@@ -1,0 +1,38 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+section.blog-preview {
+    padding: 5px 4em;
+}
+
+article.blog-excerpt {
+
+}
+
+
+section.main-excerpt {
+    text-align: justify;
+    font-family: "Droid Serif", "DejaVu Serif", "STIX", serif;
+    line-height: 1.5em;
+    padding-top: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dotted #ccc;
+    font-size: large;
+}
+
+footer p {
+    text-align: center;
+}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,15 @@
+backports-abc==0.4
+certifi==2016.8.8
+click==6.6
+Flask==0.11.1
+flask-peewee==0.6.7
+itsdangerous==0.24
+Jinja2==2.8
+MarkupSafe==0.23
+peewee==2.8.3
+singledispatch==3.4.0.3
+six==1.10.0
+tornado==4.4.1
+Werkzeug==0.11.11
+wtf-peewee==0.2.6
+WTForms==2.1
