@@ -140,3 +140,4 @@ Würde .idea/ löschen
 Würde blog/__pycache__/ löschen
 Würde blog/models.pyc löschen
 Würde blog/static/img/ löschen
+/blog/blog.db
